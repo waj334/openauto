@@ -24,6 +24,7 @@ extern "C"
 #include <ilclient.h>
 }
 
+#include <QObject>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
@@ -40,8 +41,10 @@ namespace autoapp
 namespace projection
 {
 
-class OMXVideoOutput: public VideoOutput
+class OMXVideoOutput: public QObject, public VideoOutput
 {
+    Q_OBJECT
+
 public:
     OMXVideoOutput(configuration::IConfiguration::Pointer configuration);
 
@@ -51,6 +54,7 @@ public:
     void stop() override;
 
 private:
+    void createVideoWidget();
     bool createComponents();
     bool initClock();
     bool setupTunnels();

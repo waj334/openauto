@@ -51,9 +51,16 @@ OMXVideoOutput::OMXVideoOutput(configuration::IConfiguration::Pointer configurat
     , client_(nullptr)
     , eglBuffer_(nullptr)
 {
-    videoWidget_ = std::make_unique<OMXVideoWidget>();
     memset(components_, 0, sizeof(components_));
     memset(tunnels_, 0, sizeof(tunnels_));
+
+    QMetaObject::invokeMethod(this, "createVideoWidget", Qt::BlockingQueuedConnection);
+}
+
+void OMXVideoOutput::createVideoWidget()
+{
+    videoWidget_ = std::make_unique<OMXVideoWidget>();
+    videoWidget_->showFullScreen();
 }
 
 bool OMXVideoOutput::open()
@@ -178,7 +185,7 @@ void OMXVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
                     break;
                 }
 
-                if (OMX_UseEGLImage(ILC_GET_HANDLE(components_[VideoComponent::RENDERER]), &eglBuffer, 221, nullptr, videoWidget_->getDisplay()) != OMX_ErrorNone)
+                if (OMX_UseEGLImage(ILC_GET_HANDLE(components_[VideoComponent::RENDERER]), &eglBuffer_, 221, nullptr, videoWidget_->getDisplay()) != OMX_ErrorNone)
                 {
                     break;
                 }
@@ -291,7 +298,8 @@ bool OMXVideoOutput::enablePortBuffers()
 void OMXVideoOutput::fillBufferHandler(void* data, COMPONENT_T* component)
 {
     auto self = static_cast<OMXVideoOutput*>(data);
-    OMX_FillThisBuffer(ilclient_get_handle(components_[VideoComponent::RENDERER]), self->eglBuffer_);
+    COMPONENT_T* eglRender = self->components_[VideoComponent::RENDERER];
+    OMX_FillThisBuffer(ilclient_get_handle(eglRender), self->eglBuffer_);
 }
 
 }

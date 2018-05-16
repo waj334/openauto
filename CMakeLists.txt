@@ -84,7 +84,8 @@ target_link_libraries(autoapp
                         ${WINSOCK2_LIBRARIES}
                         ${RTAUDIO_LIBRARIES}
                         ${AASDK_PROTO_LIBRARIES}
-                        ${AASDK_LIBRARIES})
+                        ${AASDK_LIBRARIES}
+                        -lGLESv2)
 
 set(btservice_sources_directory ${sources_directory}/btservice)
 set(btservice_include_directory ${include_directory}/f1x/openauto/btservice)
