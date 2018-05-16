@@ -29,6 +29,7 @@ extern "C"
 #include <thread>
 #include <boost/circular_buffer.hpp>
 #include <f1x/openauto/autoapp/Projection/VideoOutput.hpp>
+#include <f1x/openauto/autoapp/Projection/OMXVideoWidget.hpp>
 
 namespace f1x
 {
@@ -55,13 +56,16 @@ private:
     bool setupTunnels();
     bool enablePortBuffers();
     bool setupDisplayRegion();
+    static void fillBufferHandler(void* data, COMPONENT_T* component);
 
+    std::unique_ptr<OMXVideoWidget> videoWidget_;
     std::mutex mutex_;
     bool isActive_;
     bool portSettingsChanged_;
     ILCLIENT_T* client_;
     COMPONENT_T* components_[5];
     TUNNEL_T tunnels_[4];
+    OMX_BUFFERHEADERTYPE* eglBuffer_;
 };
 
 }

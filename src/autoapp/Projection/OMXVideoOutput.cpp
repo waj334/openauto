@@ -49,7 +49,9 @@ OMXVideoOutput::OMXVideoOutput(configuration::IConfiguration::Pointer configurat
     , isActive_(false)
     , portSettingsChanged_(false)
     , client_(nullptr)
+    , eglBuffer_(nullptr)
 {
+    videoWidget_ = std::make_unique<OMXVideoWidget>();
     memset(components_, 0, sizeof(components_));
     memset(tunnels_, 0, sizeof(tunnels_));
 }
@@ -73,6 +75,8 @@ bool OMXVideoOutput::open()
         OPENAUTO_LOG(error) << "[OMXVideoOutput] ilclient init failed.";
         return false;
     }
+
+    ilclient_set_fill_buffer_done_callback(client_, &OMXVideoOutput::fillBufferHandler, this);
 
     if(!this->createComponents())
     {
@@ -105,7 +109,8 @@ bool OMXVideoOutput::init()
     OPENAUTO_LOG(info) << "[OMXVideoOutput] init, state: " << isActive_;
     ilclient_change_component_state(components_[VideoComponent::DECODER], OMX_StateExecuting);
     
-    return this->setupDisplayRegion();
+    //return this->setupDisplayRegion();
+    return true;
 }
 
 bool OMXVideoOutput::setupDisplayRegion()
@@ -166,6 +171,18 @@ void OMXVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
                     break;
                 }
 
+                ilclient_change_component_state(components_[VideoComponent::RENDERER], OMX_StateIdle);
+
+                if (OMX_SendCommand(ILC_GET_HANDLE(components_[VideoComponent::RENDERER]), OMX_CommandPortEnable, 221, nullptr) != OMX_ErrorNone)
+                {
+                    break;
+                }
+
+                if (OMX_UseEGLImage(ILC_GET_HANDLE(components_[VideoComponent::RENDERER]), &eglBuffer, 221, nullptr, videoWidget_->getDisplay()) != OMX_ErrorNone)
+                {
+                    break;
+                }
+
                 ilclient_change_component_state(components_[VideoComponent::RENDERER], OMX_StateExecuting);
             }
 
@@ -210,7 +227,7 @@ bool OMXVideoOutput::createComponents()
         return false;
     }
 
-    if(ilclient_create_component(client_, &components_[VideoComponent::RENDERER], "video_render", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+    if(ilclient_create_component(client_, &components_[VideoComponent::RENDERER], "egl_render", ILCLIENT_DISABLE_ALL_PORTS) != 0)
     {
         OPENAUTO_LOG(error) << "[OMXVideoOutput] video renderer component creation failed.";
         return false;
@@ -252,7 +269,7 @@ bool OMXVideoOutput::initClock()
 bool OMXVideoOutput::setupTunnels()
 {
     set_tunnel(&tunnels_[0], components_[VideoComponent::DECODER], 131, components_[VideoComponent::SCHEDULER], 10);
-    set_tunnel(&tunnels_[1], components_[VideoComponent::SCHEDULER], 11, components_[VideoComponent::RENDERER], 90);
+    set_tunnel(&tunnels_[1], components_[VideoComponent::SCHEDULER], 11, components_[VideoComponent::RENDERER], 220);
     set_tunnel(&tunnels_[2], components_[VideoComponent::CLOCK], 80, components_[VideoComponent::SCHEDULER], 12);
 
     return ilclient_setup_tunnel(&tunnels_[2], 0, 0) == 0;
@@ -269,6 +286,12 @@ bool OMXVideoOutput::enablePortBuffers()
 
     return OMX_SetParameter(ILC_GET_HANDLE(components_[VideoComponent::DECODER]), OMX_IndexParamVideoPortFormat, &format) == OMX_ErrorNone &&
            ilclient_enable_port_buffers(components_[VideoComponent::DECODER], 130, NULL, NULL, NULL) == 0;
+}
+
+void OMXVideoOutput::fillBufferHandler(void* data, COMPONENT_T* component)
+{
+    auto self = static_cast<OMXVideoOutput*>(data);
+    OMX_FillThisBuffer(ilclient_get_handle(components_[VideoComponent::RENDERER]), self->eglBuffer_);
 }
 
 }
