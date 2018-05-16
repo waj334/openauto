@@ -53,8 +53,10 @@ public:
     void write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer) override;
     void stop() override;
 
-private:
+protected slots:
     void createVideoWidget();
+
+private:
     bool createComponents();
     bool initClock();
     bool setupTunnels();

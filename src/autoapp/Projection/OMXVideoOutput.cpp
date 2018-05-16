@@ -23,6 +23,7 @@ extern "C"
 #include <bcm_host.h>
 }
 
+#include <QApplication>
 #include <f1x/aasdk/Common/Data.hpp>
 #include <f1x/openauto/autoapp/Projection/OMXVideoOutput.hpp>
 #include <f1x/openauto/Common/Log.hpp>
@@ -51,6 +52,7 @@ OMXVideoOutput::OMXVideoOutput(configuration::IConfiguration::Pointer configurat
     , client_(nullptr)
     , eglBuffer_(nullptr)
 {
+    this->moveToThread(QApplication::instance()->thread());
     memset(components_, 0, sizeof(components_));
     memset(tunnels_, 0, sizeof(tunnels_));
 
@@ -59,8 +61,11 @@ OMXVideoOutput::OMXVideoOutput(configuration::IConfiguration::Pointer configurat
 
 void OMXVideoOutput::createVideoWidget()
 {
+    OPENAUTO_LOG(info) << "[OMXVideoOutput] create video widget.";
     videoWidget_ = std::make_unique<OMXVideoWidget>();
     videoWidget_->showFullScreen();
+
+    OPENAUTO_LOG(info) << "[OMXVideoOutput] show video widget, context: " << videoWidget_->getContext() << ", display: " << videoWidget_->getDisplay();
 }
 
 bool OMXVideoOutput::open()
