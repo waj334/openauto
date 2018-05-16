@@ -193,19 +193,6 @@ void OMXVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
                     break;
                 }
 
-                // GLuint tex;
-                // glGenTextures(1, &tex);
-                // glBindTexture(GL_TEXTURE_2D, tex);
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-                // GLubyte* pixel = new GLubyte[800*400*4];
-                // memset(pixel, 0x0f, sizeof(GLubyte)*800*400*4);  // to have a grey texture
-                // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 400, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
-
-                // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
                 auto tex = videoWidget_->defaultFramebufferObject();
                 OPENAUTO_LOG(info) << "[OMXVideoOutput] texture handler: " << tex;
                 void* eglImage = eglCreateImageKHR(videoWidget_->getDisplay(), videoWidget_->getContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)tex, 0);
@@ -267,7 +254,7 @@ bool OMXVideoOutput::createComponents()
         return false;
     }
 
-    if(ilclient_create_component(client_, &components_[VideoComponent::RENDERER], "egl_render", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+    if(ilclient_create_component(client_, &components_[VideoComponent::RENDERER], "egl_render", static_cast<ILCLIENT_CREATE_FLAGS_T>(ILCLIENT_DISABLE_ALL_PORTS | ILCLIENT_ENABLE_OUTPUT_BUFFERS)) != 0)
     {
         OPENAUTO_LOG(error) << "[OMXVideoOutput] video renderer component creation failed.";
         return false;
