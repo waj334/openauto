@@ -21,6 +21,9 @@
 extern "C"
 {
 #include <bcm_host.h>
+#include <GLES/gl.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 }
 
 #include <QApplication>
@@ -190,7 +193,13 @@ void OMXVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
                     break;
                 }
 
-                if (OMX_UseEGLImage(ILC_GET_HANDLE(components_[VideoComponent::RENDERER]), &eglBuffer_, 221, nullptr, videoWidget_->getDisplay()) != OMX_ErrorNone)
+                GLuint tex;
+                glGenTextures(1, &tex);
+                glBindTexture(GL_TEXTURE_2D, tex);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                void* eglImage = eglCreateImageKHR(videoWidget_->getDisplay(), videoWidget_->getContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)tex, 0);
+
+                if (OMX_UseEGLImage(ILC_GET_HANDLE(components_[VideoComponent::RENDERER]), &eglBuffer_, 221, nullptr, eglImage) != OMX_ErrorNone)
                 {
                     break;
                 }
