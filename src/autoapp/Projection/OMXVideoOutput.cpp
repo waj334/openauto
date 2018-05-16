@@ -91,7 +91,7 @@ bool OMXVideoOutput::open()
         return false;
     }
 
-    ilclient_set_fill_buffer_done_callback(client_, &OMXVideoOutput::fillBufferHandler, this);
+    ilclient_set_fill_buffer_done_callback(client_, OMXVideoOutput::fillBufferHandler, this);
 
     if(!this->createComponents())
     {
@@ -193,10 +193,21 @@ void OMXVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
                     break;
                 }
 
-                GLuint tex;
-                glGenTextures(1, &tex);
-                glBindTexture(GL_TEXTURE_2D, tex);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                // GLuint tex;
+                // glGenTextures(1, &tex);
+                // glBindTexture(GL_TEXTURE_2D, tex);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+                // GLubyte* pixel = new GLubyte[800*400*4];
+                // memset(pixel, 0x0f, sizeof(GLubyte)*800*400*4);  // to have a grey texture
+                // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 400, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+
+                // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                auto tex = videoWidget_->defaultFramebufferObject();
+                OPENAUTO_LOG(info) << "[OMXVideoOutput] texture handler: " << tex;
                 void* eglImage = eglCreateImageKHR(videoWidget_->getDisplay(), videoWidget_->getContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)tex, 0);
 
                 if (OMX_UseEGLImage(ILC_GET_HANDLE(components_[VideoComponent::RENDERER]), &eglBuffer_, 221, nullptr, eglImage) != OMX_ErrorNone)
@@ -205,6 +216,14 @@ void OMXVideoOutput::write(uint64_t timestamp, const aasdk::common::DataConstBuf
                 }
 
                 ilclient_change_component_state(components_[VideoComponent::RENDERER], OMX_StateExecuting);
+
+                COMPONENT_T* eglRender = components_[VideoComponent::RENDERER];
+                if(OMX_FillThisBuffer(ilclient_get_handle(eglRender), eglBuffer_) != OMX_ErrorNone)
+                {
+                    break;
+                }
+
+                OPENAUTO_LOG(info) << "[OMXVideoOutput] ok.";
             }
 
             if(OMX_EmptyThisBuffer(ILC_GET_HANDLE(components_[VideoComponent::DECODER]), buf) != OMX_ErrorNone)

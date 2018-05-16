@@ -85,8 +85,8 @@ target_link_libraries(autoapp
                         ${RTAUDIO_LIBRARIES}
                         ${AASDK_PROTO_LIBRARIES}
                         ${AASDK_LIBRARIES}
-                        -lGLESv2
-                        -lEGL)
+                        "/opt/vc/lib/libbrcmEGL.so"
+                        "/opt/vc/lib/libbrcmGLESv2.so")
 
 set(btservice_sources_directory ${sources_directory}/btservice)
 set(btservice_include_directory ${include_directory}/f1x/openauto/btservice)
