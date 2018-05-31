@@ -35,10 +35,11 @@ enum class ButtonEventType
 {
     NONE,
     PRESS,
-    RELEASE
+    RELEASE,
+    ROTATE
 };
 
-enum class WheelDirection
+enum class RotationDirection
 {
     NONE,
     LEFT,
@@ -48,7 +49,7 @@ enum class WheelDirection
 struct ButtonEvent
 {
     ButtonEventType type;
-    WheelDirection wheelDirection;
+    RotationDirection rotationDirection;
     aasdk::proto::enums::ButtonCode::Enum code;
 };
 

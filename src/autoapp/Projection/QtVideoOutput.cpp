@@ -70,6 +70,7 @@ void QtVideoOutput::write(uint64_t, const aasdk::common::DataConstBuffer& buffer
 
 void QtVideoOutput::onStartPlayback()
 {
+    videoWidget_->setAttribute(Qt::WA_AcceptTouchEvents);
     videoWidget_->setAspectRatioMode(Qt::IgnoreAspectRatio);
     videoWidget_->setFocus();
     videoWidget_->setWindowFlags(Qt::WindowStaysOnTopHint);

@@ -143,10 +143,10 @@ void InputService::onButtonEvent(const projection::ButtonEvent& event)
         aasdk::proto::messages::InputEventIndication inputEventIndication;
         inputEventIndication.set_timestamp(timestamp.count());
 
-        if(event.code == aasdk::proto::enums::ButtonCode::SCROLL_WHEEL)
+        if(event.type == projection::ButtonEventType::ROTATE)
         {
             auto relativeEvent = inputEventIndication.mutable_relative_input_event()->add_relative_input_events();
-            relativeEvent->set_delta(event.wheelDirection == projection::WheelDirection::LEFT ? -1 : 1);
+            relativeEvent->set_delta(event.rotationDirection == projection::RotationDirection::LEFT ? -1 : 1);
             relativeEvent->set_scan_code(event.code);
         }
         else
