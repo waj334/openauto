@@ -51,6 +51,8 @@ private slots:
     void onUpdateScreenDPI(int value);
     void onShowBindings();
 
+    void populateAudioDevices();
+
 private:
     void showEvent(QShowEvent* event);
     void load();

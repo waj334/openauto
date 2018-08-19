@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(openauto CXX)
 
+set(AASDK_INCLUDE_DIRS "~/aasdk/include")
+set(AASDK_LIBRARIES "~/aasdk/lib/libaasdk.so")
+set(AASDK_PROTO_INCLUDE_DIRS "~/aasdk/build")
+set(AASDK_PROTO_LIBRARIES "~/aasdk/lib/libaasdk_proto.so")
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)

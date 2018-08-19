@@ -20,6 +20,9 @@
 #include <f1x/openauto/autoapp/UI/SettingsWindow.hpp>
 #include "ui_settingswindow.h"
 
+#include <RtAudio.h>
+#include <QAudioDeviceInfo>
+
 namespace f1x
 {
 namespace openauto
@@ -45,6 +48,8 @@ SettingsWindow::SettingsWindow(configuration::IConfiguration::Pointer configurat
     connect(ui_->pushButtonSelectAll, &QPushButton::clicked, std::bind(&SettingsWindow::setButtonCheckBoxes, this, true));
     connect(ui_->pushButtonResetToDefaults, &QPushButton::clicked, this, &SettingsWindow::onResetToDefaults);
     connect(ui_->pushButtonShowBindings, &QPushButton::clicked, this, &SettingsWindow::onShowBindings);
+    connect(ui_->radioButtonRtAudio, SIGNAL(toggled(bool)), this, SLOT(populateAudioDevices()));
+    connect(ui_->radioButtonQtAudio, SIGNAL(toggled(bool)), this, SLOT(populateAudioDevices()));
 }
 
 SettingsWindow::~SettingsWindow()
@@ -255,6 +260,41 @@ void SettingsWindow::onShowBindings()
     QMessageBox confirmationMessage(QMessageBox::Information, "Information", message, QMessageBox::Ok);
     confirmationMessage.setWindowFlags(Qt::WindowStaysOnTopHint);
     confirmationMessage.exec();
+}
+
+void SettingsWindow::populateAudioDevices()
+{
+    ui_->outputDeviceComboBox->clear();
+    ui_->inputDeviceComboBox->clear();
+
+    if (configuration_->getAudioOutputBackendType() == configuration::AudioOutputBackendType::RTAUDIO) {
+        std::vector<RtAudio::Api> apis;
+        RtAudio::getCompiledApi(apis);
+        auto dac_ = std::find(apis.begin(), apis.end(), RtAudio::LINUX_PULSE) == apis.end() ? std::make_unique<RtAudio>() : std::make_unique<RtAudio>(RtAudio::LINUX_PULSE);
+
+        for (unsigned int i =0 ; i < dac_->getDeviceCount(); ++i) {
+            auto info = dac_->getDeviceInfo(i);
+
+            if (info.inputChannels > 0) {
+                ui_->inputDeviceComboBox->addItem(info.name.c_str(), QVariant(i));
+            }
+
+            if (info.outputChannels > 0) {
+                ui_->outputDeviceComboBox->addItem(info.name.c_str(), QVariant(i));
+            }
+        }
+    } else {
+        auto inputs = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+        auto outputs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+
+        foreach(auto input, inputs) {
+            ui_->inputDeviceComboBox->addItem(input.deviceName(), input.deviceName());
+        }
+
+        foreach(auto output, outputs) {
+            ui_->outputDeviceComboBox->addItem(output.deviceName(), output.deviceName());
+        }
+    }
 }
 
 }
