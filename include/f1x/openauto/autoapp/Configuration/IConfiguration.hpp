@@ -20,6 +20,7 @@
 
 #include <string>
 #include <QRect>
+#include <QVariant>
 #include <aasdk_proto/VideoFPSEnum.pb.h>
 #include <aasdk_proto/VideoResolutionEnum.pb.h>
 #include <aasdk_proto/ButtonCodeEnum.pb.h>
@@ -80,6 +81,10 @@ public:
     virtual void setSpeechAudioChannelEnabled(bool value) = 0;
     virtual AudioOutputBackendType getAudioOutputBackendType() const = 0;
     virtual void setAudioOutputBackendType(AudioOutputBackendType value) = 0;
+    virtual QVariant getAudioInputDevice() = 0;
+    virtual void setAudioInputDevice(QVariant device) = 0;
+    virtual QVariant getAudioOutputDevice() = 0;
+    virtual void setAudioOutputDevice(QVariant device) = 0;
 };
 
 }

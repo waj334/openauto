@@ -69,6 +69,10 @@ public:
     void setMusicAudioChannelEnabled(bool value) override;
     bool speechAudioChannelEnabled() const override;
     void setSpeechAudioChannelEnabled(bool value) override;
+    QVariant getAudioInputDevice() override;
+    void setAudioInputDevice(QVariant device) override;
+    QVariant getAudioOutputDevice() override;
+    void setAudioOutputDevice(QVariant device) override;
     AudioOutputBackendType getAudioOutputBackendType() const override;
     void setAudioOutputBackendType(AudioOutputBackendType value) override;
 
@@ -91,6 +95,8 @@ private:
     bool musicAudioChannelEnabled_;
     bool speechAudiochannelEnabled_;
     AudioOutputBackendType audioOutputBackendType_;
+    QVariant mOutputDevice;
+    QVariant mInputDevice;
 
     static const std::string cConfigFileName;
 

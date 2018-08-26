@@ -286,6 +286,26 @@ void Configuration::setSpeechAudioChannelEnabled(bool value)
     speechAudiochannelEnabled_ = value;
 }
 
+QVariant Configuration::getAudioInputDevice()
+{
+    return mInputDevice;
+}
+
+void Configuration::setAudioInputDevice(QVariant device)
+{
+    mInputDevice = device;
+}
+
+QVariant Configuration::getAudioOutputDevice()
+{
+    return mOutputDevice;
+}
+
+void Configuration::setAudioOutputDevice(QVariant device)
+{
+    mOutputDevice = device;
+}
+
 AudioOutputBackendType Configuration::getAudioOutputBackendType() const
 {
     return audioOutputBackendType_;

@@ -22,6 +22,9 @@
 
 #include <RtAudio.h>
 #include <QAudioDeviceInfo>
+#include <soundio/soundio.h>
+
+#include <f1x/openauto/Common/Log.hpp>
 
 namespace f1x
 {
@@ -50,6 +53,9 @@ SettingsWindow::SettingsWindow(configuration::IConfiguration::Pointer configurat
     connect(ui_->pushButtonShowBindings, &QPushButton::clicked, this, &SettingsWindow::onShowBindings);
     connect(ui_->radioButtonRtAudio, SIGNAL(toggled(bool)), this, SLOT(populateAudioDevices()));
     connect(ui_->radioButtonQtAudio, SIGNAL(toggled(bool)), this, SLOT(populateAudioDevices()));
+    connect(ui_->radioButtonPulseAudio, SIGNAL(toggled(bool)), this, SLOT(populateAudioDevices()));
+
+    populateAudioDevices();
 }
 
 SettingsWindow::~SettingsWindow()
@@ -102,7 +108,17 @@ void SettingsWindow::onSave()
 
     configuration_->setMusicAudioChannelEnabled(ui_->checkBoxMusicAudioChannel->isChecked());
     configuration_->setSpeechAudioChannelEnabled(ui_->checkBoxSpeechAudioChannel->isChecked());
-    configuration_->setAudioOutputBackendType(ui_->radioButtonRtAudio->isChecked() ? configuration::AudioOutputBackendType::RTAUDIO : configuration::AudioOutputBackendType::QT);
+
+    if (ui_->radioButtonRtAudio->isChecked()) {
+        configuration_->setAudioOutputBackendType(configuration::AudioOutputBackendType::RTAUDIO);
+    } else if (ui_->radioButtonQtAudio->isChecked()) {
+        configuration_->setAudioOutputBackendType(configuration::AudioOutputBackendType::QT);
+    } else if (ui_->radioButtonPulseAudio->isChecked()) {
+        configuration_->setAudioOutputBackendType(configuration::AudioOutputBackendType::PULSEAUDIO);
+    }
+
+    configuration_->setAudioInputDevice(ui_->inputDeviceComboBox->currentData());
+    configuration_->setAudioOutputDevice(ui_->outputDeviceComboBox->currentData());
 
     configuration_->save();
     this->close();
@@ -159,6 +175,19 @@ void SettingsWindow::load()
     const auto& audioOutputBackendType = configuration_->getAudioOutputBackendType();
     ui_->radioButtonRtAudio->setChecked(audioOutputBackendType == configuration::AudioOutputBackendType::RTAUDIO);
     ui_->radioButtonQtAudio->setChecked(audioOutputBackendType == configuration::AudioOutputBackendType::QT);
+    ui_->radioButtonPulseAudio->setChecked(audioOutputBackendType == configuration::AudioOutputBackendType::PULSEAUDIO);
+
+    for (int i = 0; i < ui_->inputDeviceComboBox->count(); ++i) {
+        if ( configuration_->getAudioInputDevice().toString().compare(ui_->inputDeviceComboBox->itemData(i).toString()) == 0) {
+            ui_->inputDeviceComboBox->setCurrentIndex(i);
+        }
+    }
+
+    for (int i = 0; i < ui_->outputDeviceComboBox->count(); ++i) {
+        if ( configuration_->getAudioOutputDevice().toString().compare(ui_->outputDeviceComboBox->itemData(i).toString()) == 0) {
+            ui_->outputDeviceComboBox->setCurrentIndex(i);
+        }
+    }
 }
 
 void SettingsWindow::loadButtonCheckBoxes()
@@ -267,7 +296,7 @@ void SettingsWindow::populateAudioDevices()
     ui_->outputDeviceComboBox->clear();
     ui_->inputDeviceComboBox->clear();
 
-    if (configuration_->getAudioOutputBackendType() == configuration::AudioOutputBackendType::RTAUDIO) {
+    if (ui_->radioButtonRtAudio->isChecked()) {
         std::vector<RtAudio::Api> apis;
         RtAudio::getCompiledApi(apis);
         auto dac_ = std::find(apis.begin(), apis.end(), RtAudio::LINUX_PULSE) == apis.end() ? std::make_unique<RtAudio>() : std::make_unique<RtAudio>(RtAudio::LINUX_PULSE);
@@ -276,14 +305,14 @@ void SettingsWindow::populateAudioDevices()
             auto info = dac_->getDeviceInfo(i);
 
             if (info.inputChannels > 0) {
-                ui_->inputDeviceComboBox->addItem(info.name.c_str(), QVariant(i));
+                ui_->inputDeviceComboBox->addItem(info.name.c_str(), info.name.c_str());
             }
 
             if (info.outputChannels > 0) {
-                ui_->outputDeviceComboBox->addItem(info.name.c_str(), QVariant(i));
+                ui_->outputDeviceComboBox->addItem(info.name.c_str(), info.name.c_str());
             }
         }
-    } else {
+    } else if (ui_->radioButtonQtAudio->isChecked()) {
         auto inputs = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
         auto outputs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
 
@@ -294,8 +323,31 @@ void SettingsWindow::populateAudioDevices()
         foreach(auto output, outputs) {
             ui_->outputDeviceComboBox->addItem(output.deviceName(), output.deviceName());
         }
+    } else if (ui_->radioButtonPulseAudio->isChecked()) {
+        struct SoundIo *soundio = soundio_create();
+        auto err = soundio_connect_backend(soundio, SoundIoBackendPulseAudio);
+        soundio_flush_events(soundio);
+
+        OPENAUTO_LOG(debug) << "[PulseAudioOutput] " << soundio_strerror(err);
+
+        int output_count = soundio_output_device_count(soundio);
+        int input_count = soundio_input_device_count(soundio);
+
+        for (int i = 0; i < input_count; i += 1) {
+            struct SoundIoDevice *device = soundio_get_input_device(soundio, i);
+            ui_->inputDeviceComboBox->addItem(device->name, device->id);
+            soundio_device_unref(device);
+        }
+
+        for (int i = 0; i < output_count; i += 1) {
+            struct SoundIoDevice *device = soundio_get_output_device(soundio, i);
+            ui_->outputDeviceComboBox->addItem(device->name, device->id);
+            soundio_device_unref(device);
+        }
+
+        soundio_destroy(soundio);
     }
-}
+    }
 
 }
 }

@@ -445,32 +445,29 @@ color: rgb(238, 238, 236);</string>
          <property name="title">
           <string>Output backend</string>
          </property>
-         <widget class="QRadioButton" name="radioButtonRtAudio">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>30</y>
-            <width>112</width>
-            <height>23</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>RT audio</string>
-          </property>
-         </widget>
-         <widget class="QRadioButton" name="radioButtonQtAudio">
-          <property name="geometry">
-           <rect>
-            <x>140</x>
-            <y>30</y>
-            <width>112</width>
-            <height>23</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Qt</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QRadioButton" name="radioButtonRtAudio">
+            <property name="text">
+             <string>RT audio</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButtonQtAudio">
+            <property name="text">
+             <string>Qt</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButtonPulseAudio">
+            <property name="text">
+             <string>PulseAudio</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
