@@ -48,6 +48,9 @@ signals:
     void toggleCursor();
     void openConnectDialog();
 
+private slots:
+    void updateTime();
+
 private:
     Ui::MainWindow* ui_;
 };

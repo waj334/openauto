@@ -17,6 +17,8 @@
 */
 
 #include <QApplication>
+#include <QTime>
+#include <QTimer>
 #include <f1x/openauto/autoapp/UI/MainWindow.hpp>
 #include "ui_mainwindow.h"
 
@@ -34,6 +36,22 @@ MainWindow::MainWindow(QWidget *parent)
     , ui_(new Ui::MainWindow)
 {
     ui_->setupUi(this);
+    updateTime();
+
+    QTimer *clockTimer = new QTimer(this);
+    clockTimer->start(1000);
+
+    connect(clockTimer, SIGNAL(timeout()), this, SLOT(updateTime()));
+    connect(ui_->homeButton, &QPushButton::clicked, [this](){
+        this->ui_->stackedWidget->setCurrentIndex(1);
+    });
+    connect(ui_->MusicButton, &QPushButton::clicked, [this](){
+        this->ui_->stackedWidget->setCurrentIndex(0);
+    });
+    connect(ui_->SettingsButton, &QPushButton::clicked, [this](){
+        this->ui_->stackedWidget->setCurrentIndex(2);
+    });
+
     connect(ui_->pushButtonSettings, &QPushButton::clicked, this, &MainWindow::openSettings);
     connect(ui_->pushButtonExit, &QPushButton::clicked, this, &MainWindow::exit);
     connect(ui_->pushButtonToggleCursor, &QPushButton::clicked, this, &MainWindow::toggleCursor);
@@ -43,6 +61,15 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui_;
+}
+
+void MainWindow::updateTime() {
+    QTime time = QTime::currentTime();
+    QDate date = QDate::currentDate();
+    QString timeText = time.toString("hh:mm");
+    QString dateText = date.toString("dddd, MMMM d, yyyy");
+    ui_->timeLabel->setText(timeText);
+    ui_->dateLabel->setText(dateText);
 }
 
 }

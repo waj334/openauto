@@ -117,7 +117,7 @@ bool OMXVideoOutput::setupDisplayRegion()
     displayRegion.layer = static_cast<OMX_S32>(configuration_->getOMXLayerIndex());
     displayRegion.fullscreen = OMX_TRUE;
     displayRegion.noaspect = OMX_TRUE;
-    displayRegion.set = static_cast<OMX_DISPLAYSETTYPE >(OMX_DISPLAY_SET_FULLSCREEN | OMX_DISPLAY_SET_NOASPECT | OMX_DISPLAY_SET_LAYER);
+    displayRegion.set = static_cast<OMX_DISPLAYSETTYPE >(OMX_DISPLAY_SET_FULLSCREEN | OMX_DISPLAY_SET_NOASPECT | OMX_DISPLAY_SET_LAYER | OMX_DISPLAY_SET_MODE);
     displayRegion.mode = OMX_DISPLAY_MODE_FILL;
 
     return OMX_SetConfig(ilclient_get_handle(components_[VideoComponent::RENDERER]), OMX_IndexConfigDisplayRegion, &displayRegion) == OMX_ErrorNone;

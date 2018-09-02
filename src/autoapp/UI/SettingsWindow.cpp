@@ -324,28 +324,44 @@ void SettingsWindow::populateAudioDevices()
             ui_->outputDeviceComboBox->addItem(output.deviceName(), output.deviceName());
         }
     } else if (ui_->radioButtonPulseAudio->isChecked()) {
-        struct SoundIo *soundio = soundio_create();
-        auto err = soundio_connect_backend(soundio, SoundIoBackendPulseAudio);
-        soundio_flush_events(soundio);
+//        struct SoundIo *soundio = soundio_create();
+//        auto err = soundio_connect_backend(soundio, SoundIoBackendPulseAudio);
+//        soundio_flush_events(soundio);
 
-        OPENAUTO_LOG(debug) << "[PulseAudioOutput] " << soundio_strerror(err);
+//        OPENAUTO_LOG(debug) << "[PulseAudioOutput] " << soundio_strerror(err);
 
-        int output_count = soundio_output_device_count(soundio);
-        int input_count = soundio_input_device_count(soundio);
+//        int output_count = soundio_output_device_count(soundio);
+//        int input_count = soundio_input_device_count(soundio);
 
-        for (int i = 0; i < input_count; i += 1) {
-            struct SoundIoDevice *device = soundio_get_input_device(soundio, i);
-            ui_->inputDeviceComboBox->addItem(device->name, device->id);
-            soundio_device_unref(device);
+//        for (int i = 0; i < input_count; i += 1) {
+//            struct SoundIoDevice *device = soundio_get_input_device(soundio, i);
+//            ui_->inputDeviceComboBox->addItem(device->name, device->id);
+//            soundio_device_unref(device);
+//        }
+
+//        for (int i = 0; i < output_count; i += 1) {
+//            struct SoundIoDevice *device = soundio_get_output_device(soundio, i);
+//            ui_->outputDeviceComboBox->addItem(device->name, device->id);
+//            soundio_device_unref(device);
+//        }
+
+//        soundio_destroy(soundio);
+
+        std::vector<RtAudio::Api> apis;
+        RtAudio::getCompiledApi(apis);
+        auto dac_ = std::make_unique<RtAudio>(RtAudio::LINUX_PULSE);
+
+        for (unsigned int i =0 ; i < dac_->getDeviceCount(); ++i) {
+            auto info = dac_->getDeviceInfo(i);
+
+            if (info.inputChannels > 0) {
+                ui_->inputDeviceComboBox->addItem(info.name.c_str(), info.name.c_str());
+            }
+
+            if (info.outputChannels > 0) {
+                ui_->outputDeviceComboBox->addItem(info.name.c_str(), info.name.c_str());
+            }
         }
-
-        for (int i = 0; i < output_count; i += 1) {
-            struct SoundIoDevice *device = soundio_get_output_device(soundio, i);
-            ui_->outputDeviceComboBox->addItem(device->name, device->id);
-            soundio_device_unref(device);
-        }
-
-        soundio_destroy(soundio);
     }
     }
 
